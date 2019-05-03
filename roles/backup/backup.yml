@@ -1,10 +1,8 @@
 # Script to backup
 ---
 - name: Script to backup Splunk UBA
-  hosts: splunkubapepper1
+  hosts: host
   remote_user: caspida
-  #become: yes
-  #become_method: sudo
   gather_facts: "{{ facts }}"
 
   vars:
@@ -12,6 +10,7 @@
     # getting date in YYYYMMDDHHMM
     # this is causing issues with minute changing, everytime I run the playbook, coz the following task is to create dir underneath
     #date: "{{ lookup('pipe', 'date +%Y%m%d%H%M') }}"
+    # getting date in YYYYMMDD
     date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
     ubabackuploc: "{{ date }}"
     owner: caspida
@@ -19,9 +18,8 @@
     facts: yes
 
   tasks:
-    # to be enabled, later
-    #- name: stop the Splunk UBA services
-    #  shell: /opt/caspida/bin/Caspida stop
+    - name: stop the Splunk UBA services
+      shell: /opt/caspida/bin/Caspida stop
 
     - name: create backup directory, match with current date and time
       file:
@@ -33,9 +31,9 @@
       become: yes
       become_method: sudo
 
-#    - name: pause playbook for 2 minutes
-#      pause:
-#        minutes: 2
+    - name: pause playbook for 2 minutes
+      pause:
+        minutes: 2
 
     - name: create 'conf' dir under ubabackup
       file:

@@ -1,9 +1,7 @@
 ---
 - name: Script to rollback backup Splunk UBA, changes
-  hosts: splunkubapepper1
+  hosts: host
   remote_user: caspida
-  #become: yes
-  #become_method: sudo
   gather_facts: "{{ facts }}"
 
   vars:
