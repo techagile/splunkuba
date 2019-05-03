@@ -1,0 +1,16 @@
+--- # Play to setup UBA on ProxMox infrastructure
+# sudo qm importovf 1011 /mnt/pve/dev-nas-2-pmxshare/template/iso/tmp/splunk-uba-ova-software_42.ovf dev-nas-2-pmxshare -format qcow2
+
+- proxmox: 
+    vmid: 117
+    node: dev-pmx-12
+    api_user: "{{ pmx_user }}"
+    api_host: dev-pmx-12
+    password: "{{ pmx_password }}"
+    hostname: splunk-uba-2
+    ostemplate: '/mnt/pve/dev-nas-2-pmxshare/template/iso/tmp/splunk-uba-ova-software_42.ovf'
+    netif: '{"net0":"name=eth0,ip=dhcp,ip6=dhcp,bridge=vmbr0"}'
+    memory: 64000
+    cpus: 16
+    disk: 50
+

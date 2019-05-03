@@ -1,0 +1,14 @@
+---
+- name: Script to rollback backup Splunk UBA, changes
+  hosts: splunkubapepper1
+  remote_user: caspida
+  #become: yes
+  #become_method: sudo
+  gather_facts: "{{ facts }}"
+
+  vars:
+    facts: yes
+
+  tasks:
+  - name: Start all Splunk UBA services
+    shell: /opt/caspida/bin/Caspida start-all

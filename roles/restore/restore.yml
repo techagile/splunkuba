@@ -1,0 +1,20 @@
+# Script to restore Splunk UBA from backup
+---
+- name: Script to backup Splunk UBA
+  hosts: splunkubapepper1
+  remote_user: caspida
+  #become: yes
+  #become_method: sudo
+  gather_facts: "{{ facts }}"
+
+  vars:
+    # Note: To set BACKUPDIR is VERY IMPORTANT step to run this playbook
+    backupdir: "/var/vcap/ubabackup/<location>"
+    owner: caspida
+    group: caspida
+    facts: yes
+
+  tasks:
+    # to be enabled, later
+    #- name: stop the Splunk UBA services
+    #  shell: /opt/caspida/bin/Caspida stop-all

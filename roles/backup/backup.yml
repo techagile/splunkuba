@@ -1,0 +1,131 @@
+# Script to backup
+---
+- name: Script to backup Splunk UBA
+  hosts: splunkubapepper1
+  remote_user: caspida
+  #become: yes
+  #become_method: sudo
+  gather_facts: "{{ facts }}"
+
+  vars:
+    backupdir: "/var/vcap/ubabackup/"
+    # getting date in YYYYMMDDHHMM
+    # this is causing issues with minute changing, everytime I run the playbook, coz the following task is to create dir underneath
+    #date: "{{ lookup('pipe', 'date +%Y%m%d%H%M') }}"
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    ubabackuploc: "{{ date }}"
+    owner: caspida
+    group: caspida
+    facts: yes
+
+  tasks:
+    # to be enabled, later
+    #- name: stop the Splunk UBA services
+    #  shell: /opt/caspida/bin/Caspida stop
+
+    - name: create backup directory, match with current date and time
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+      become: yes
+      become_method: sudo
+
+#    - name: pause playbook for 2 minutes
+#      pause:
+#        minutes: 2
+
+    - name: create 'conf' dir under ubabackup
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/conf"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: create 'local_conf' dir under ubabackup
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/local_conf"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: create 'hdfs' dir under ubabackup
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/hdfs"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: create 'postgres' dir under ubabackup
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/postgres"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: create 'redis' dir under ubabackup
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/redis"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: create 'timeseries' dir under ubabackup
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/timeseries"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: Backup PostgreSQL 'caspidadb'
+      shell: pg_dump caspidadb > "{{ backupdir }}{{ ubabackuploc }}/postgres"/caspidadb_dump
+      remote_user: caspida
+
+    - name: Backup PostgreSQL 'metastore'
+      shell: pg_dump metastore > "{{ backupdir }}{{ ubabackuploc }}/postgres"/metastore_dump
+
+    - name: Backup Hadoop, this command will take time, depending on the the size of deployment
+      shell: nohup hadoop fs -copyToLocal /user "{{ backupdir }}{{ ubabackuploc }}/hdfs"/ &
+
+    - name: Stop all Splunk UBA services
+      shell: /opt/caspida/bin/Caspida stop-all
+
+    - name: Backup remaining services, i.e. local_conf
+      shell: cp -pr /etc/caspida/local/conf/* "{{ backupdir }}{{ ubabackuploc }}/local_conf"/
+
+    - name: Backup remaining services i.e. timeseries
+      shell: cp -pr /var/vcap/store/timeseries/* "{{ backupdir }}{{ ubabackuploc }}/timeseries"/
+      become: yes
+      become_method: sudo
+
+    - name: change ownership 'timeseries' caspida:caspida
+      shell: chown -R caspida:caspida "{{ backupdir }}{{ ubabackuploc }}/timeseries"
+      become: yes
+      become_method: sudo
+
+    - name: redis backup process
+      shell: rnodes=$(grep redis /opt/caspida/conf/deployment/caspida-deployment.conf | sed 's/.*=//g' | sed 's/,/ /g')
+
+    - name: redis backup directory
+      file:
+        path: "{{ backupdir }}{{ ubabackuploc }}/redis/${rnodes}"
+        state: directory
+        mode: 0755
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+
+    - name: copy redis config to backupdir
+      shell: cp -pr /var/lib/redis/* "{{ backupdir }}{{ ubabackuploc }}/redis/${rnodes}/"
+      become: yes
+      become_method: sudo
+
+    - name: Start all UBA services
+      shell: /opt/caspida/bin/Caspida start-all
