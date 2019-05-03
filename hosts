@@ -1,0 +1,11 @@
+#file that contain Splunk host information
+
+[dev-pmx-12-host]
+dev-pmx-12
+
+[splunkubapepper1]
+192.168.208.193
+
+
+[splunkubapepper2]
+192.168.208.89
